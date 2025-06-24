@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Game Tài Xỉu</title>
+    <style>
+        /* CSS đẹp, hiện đại */
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        header {
+            margin-top: 40px;
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+        }
+        #dice-container {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+        }
+        .dice {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+            font-weight: 900;
+            color: #e74c3c;
+            user-select: none;
+            transition: transform 0.3s ease;
+        }
+        .dice.rolling {
+            animation: shake 0.6s infinite;
+        }
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(10deg); }
+            50% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+        #result {
+            margin-top: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+            min-height: 2.5rem;
+        }
+        #buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+        }
+        button {
+            background: #fff;
+            border: none;
+            border-radius: 30px;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background-color: #e74c3c;
+            color: #fff;
+            transform: scale(1.05);
+        }
+        #scoreboard {
+            margin-top: 40px;
+            background: rgba(255,255,255,0.3);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            color: #222;
+            font-size: 1.2rem;
+            width: 300px;
+            text-align: center;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <header>Game Tài Xỉu - Xóc Xí Ngầu</header>
+
+    <div id="dice-container">
+        <div class="dice" id="dice1">⚀</div>
+        <div class="dice" id="dice2">⚀</div>
+        <div class="dice" id="dice3">⚀</div>
+    </div>
+
+    <div id="result"></div>
+
+    <div id="buttons">
+        <button id="btn-tai">TÀI</button>
+        <button id="btn-xiu">XỈU</button>
+    </div>
+
+    <div id="scoreboard">
+        <div>Thắng: <span id="win-count">0</span></div>
+        <div>Thua: <span id="lose-count">0</span></div>
+        <div>Lượt chơi: <span id="total-count">0</span></div>
+    </div>
+
+    <script>
+        const diceEls = [
+            document.getElementById('dice1'),
+            document.getElementById('dice2'),
+            document.getElementById('dice3')
+        ];
+        const resultEl = document.getElementById('result');
+        const btnTai = document.getElementById('btn-tai');
+        const btnXiu = document.getElementById('btn-xiu');
+
+        const winCountEl = document.getElementById('win-count');
+        const loseCountEl = document.getElementById('lose-count');
+        const totalCountEl = document.getElementById('total-count');
+
+        let winCount = 0;
+        let loseCount = 0;
+        let totalCount = 0;
+
+        // Unicode xúc xắc ⚀ ⚁ ⚂ ⚃ ⚄ ⚅
+        const diceSymbols = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+
+        function rollDice() {
+            // tạo kết quả 3 xúc xắc từ 1-6
+            return [
+                Math.floor(Math.random()*6)+1,
+                Math.floor(Math.random()*6)+1,
+                Math.floor(Math.random()*6)+1,
+            ];
+        }
+
+        function showDice(values) {
+            for(let i=0; i<3; i++) {
+                diceEls[i].textContent = diceSymbols[values[i]-1];
+            }
+        }
+
+        function sumDice(values) {
+            return values.reduce((a,b) => a+b, 0);
+        }
+
+        function isTai(sum) {
+            return sum >= 11 && sum <= 17;
+        }
+        function isXiu(sum) {
+            return sum >= 4 && sum <= 10;
+        }
+
+        function animateRolling() {
+            diceEls.forEach(die => die.classList.add('rolling'));
+        }
+        function stopRolling() {
+            diceEls.forEach(die => die.classList.remove('rolling'));
+        }
+
+        function playGame(choice) {
+            // Bật animation lắc xúc xắc trong 1.2s
+            animateRolling();
+
+            setTimeout(() => {
+                stopRolling();
+
+                const diceVals = rollDice();
+                showDice(diceVals);
+
+                const total = sumDice(diceVals);
+
+                totalCount++;
+                totalCountEl.textContent = totalCount;
+
+                if(choice === 'tai') {
+                    if(isTai(total)) {
+                        winCount++;
+                        winCountEl.textContent = winCount;
+                        resultEl.textContent = `Bạn chọn TÀI và thắng! (Tổng: ${total}) 🎉`;
+                        resultEl.style.color = '#2ecc71'; // xanh lá
+                    } else {
+                        loseCount++;
+                        loseCountEl.textContent = loseCount;
+                        resultEl.textContent = `Bạn chọn TÀI và thua! (Tổng: ${total}) 😞`;
+                        resultEl.style.color = '#e74c3c'; // đỏ
+                    }
+                } else if(choice === 'xiu') {
+                    if(isXiu(total)) {
+                        winCount++;
+                        winCountEl.textContent = winCount;
+                        resultEl.textContent = `Bạn chọn XỈU và thắng! (Tổng: ${total}) 🎉`;
+                        resultEl.style.color = '#2ecc71';
+                    } else {
+                        loseCount++;
+                        loseCountEl.textContent = loseCount;
+                        resultEl.textContent = `Bạn chọn XỈU và thua! (Tổng: ${total}) 😞`;
+                        resultEl.style.color = '#e74c3c';
+                    }
+                }
+
+            }, 1200);
+        }
+
+        btnTai.addEventListener('click', () => playGame('tai'));
+        btnXiu.addEventListener('click', () => playGame('xiu'));
+
+        // Hiển thị xúc xắc ban đầu
+        showDice([1,1,1]);
+    </script>
+</body>
+</html>
